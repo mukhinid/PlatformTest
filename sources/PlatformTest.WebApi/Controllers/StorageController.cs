@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PlatformTest.Core.Interfaces;
 using PlatformTest.Core.Storages;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace PlatformTest.WebApi.Controllers
@@ -17,6 +18,39 @@ namespace PlatformTest.WebApi.Controllers
         {
             _localService = localService;
             _ftpService = ftpService;
+        }
+
+        [HttpGet("{filename}")]
+        public IActionResult Get([FromQuery]string storage, [FromRoute]string filename)
+        {
+            if (string.IsNullOrEmpty(storage))
+            {
+                return BadRequest();
+            }
+
+            switch(storage)
+            {
+                case "local":
+                    if (string.IsNullOrEmpty(filename))
+                    {
+                        var result = _localService.GetAll();
+                        return Ok(result);
+                    }
+                    else
+                    {
+                        try
+                        {
+                            var result = _localService.GetFile(filename);
+                            return File(result, "text/plain");
+                        }
+                        catch(FileNotFoundException ex)
+                        {
+                            return NotFound(ex);
+                        }
+                    }
+                default:
+                    return NotFound();
+            }
         }
 
         [HttpPost]
