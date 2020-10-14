@@ -7,6 +7,7 @@ namespace PlatformTest.Core.Interfaces
     {
         Task<IEnumerable<string>> GetAll();
         Task<byte[]> GetFile(string name);
+        Task Delete(string filename);
         Task Save(string filename, byte[] data);
     }
 }

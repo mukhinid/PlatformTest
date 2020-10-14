@@ -8,6 +8,11 @@ namespace PlatformTest.Core.Services
 {
     public sealed class FtpStorageService : IStorageService<FtpStorage>
     {
+        public Task Delete(string filename)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<IEnumerable<string>> GetAll()
         {
             throw new NotImplementedException();

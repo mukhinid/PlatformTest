@@ -22,6 +22,23 @@ namespace PlatformTest.Core.Services
             }
         }
 
+        public Task Delete(string filename)
+        {
+            if (!Directory.Exists(_options.RootDir))
+            {
+                throw new DirectoryNotFoundException();
+            }
+
+            var path = Path.Combine(_options.RootDir, filename);
+            if (!File.Exists(path))
+            {
+                throw new FileNotFoundException();
+            }
+
+            File.Delete(path);
+            return Task.CompletedTask;
+        }
+
         public Task<IEnumerable<string>> GetAll()
         {
             if (!Directory.Exists(_options.RootDir))
