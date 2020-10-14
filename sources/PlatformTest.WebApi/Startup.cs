@@ -1,14 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using PlatformTest.Core.Interfaces;
+using PlatformTest.Core.Options;
+using PlatformTest.Core.Services;
+using PlatformTest.Core.Storages;
 
 namespace PlatformTest.WebApi
 {
@@ -21,13 +19,16 @@ namespace PlatformTest.WebApi
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+
+            services.Configure<LocalStorageOptions>(Configuration.GetSection(LocalStorageOptions.Section));
+
+            services.AddTransient<IStorageService<FtpStorage>, FtpStorageService>();
+            services.AddTransient<IStorageService<LocalStorage>, LocalStorageService>();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
