@@ -4,6 +4,7 @@ using PlatformTest.Core.Options;
 using PlatformTest.Core.Storages;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace PlatformTest.Core.Services
 {
@@ -21,17 +22,17 @@ namespace PlatformTest.Core.Services
             }
         }
 
-        public IEnumerable<string> GetAll()
+        public Task<IEnumerable<string>> GetAll()
         {
             if (!Directory.Exists(_options.RootDir))
             {
                 throw new DirectoryNotFoundException();
             }
 
-            return Directory.EnumerateFiles(_options.RootDir);
+            return Task.FromResult(Directory.EnumerateFiles(_options.RootDir));
         }
 
-        public byte[] GetFile(string name)
+        public async Task<byte[]> GetFile(string name)
         {
             if (!Directory.Exists(_options.RootDir))
             {
@@ -44,15 +45,13 @@ namespace PlatformTest.Core.Services
                 throw new FileNotFoundException();
             }
 
-            using (var stream = File.OpenRead(path))
-            {
-                var buffer = new byte[stream.Length];
-                stream.Read(buffer);
-                return buffer;
-            }
+            using var stream = File.OpenRead(path);
+            var buffer = new byte[stream.Length];
+            await stream.ReadAsync(buffer);
+            return buffer;
         }
 
-        public void Save(string filename, byte[] data)
+        public async Task Save(string filename, byte[] data)
         {
             if (!Directory.Exists(_options.RootDir))
             {
@@ -60,7 +59,7 @@ namespace PlatformTest.Core.Services
             }
 
             var path = Path.Combine(_options.RootDir, filename);
-            File.WriteAllBytes(path, data);
+            await File.WriteAllBytesAsync(path, data);
         }
     }
 }

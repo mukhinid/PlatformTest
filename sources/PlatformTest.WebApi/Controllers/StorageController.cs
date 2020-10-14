@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PlatformTest.Core.Interfaces;
 using PlatformTest.Core.Storages;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -20,8 +21,33 @@ namespace PlatformTest.WebApi.Controllers
             _ftpService = ftpService;
         }
 
+        [HttpGet()]
+        public async Task<IActionResult> Get([FromQuery] string storage)
+        {
+            if (string.IsNullOrEmpty(storage))
+            {
+                return BadRequest();
+            }
+
+            switch(storage)
+            {
+                case "local":
+                    try
+                    {
+                        var result = await _localService.GetAll();
+                        return Ok(result);
+                    }
+                    catch(Exception ex)
+                    {
+                        return BadRequest(ex.Message);
+                    }
+                default:
+                    return BadRequest();
+            }
+        }
+
         [HttpGet("{filename}")]
-        public IActionResult Get([FromQuery]string storage, [FromRoute]string filename)
+        public async Task<IActionResult> Get([FromQuery]string storage, [FromRoute]string filename)
         {
             if (string.IsNullOrEmpty(storage))
             {
@@ -33,34 +59,37 @@ namespace PlatformTest.WebApi.Controllers
                 case "local":
                     if (string.IsNullOrEmpty(filename))
                     {
-                        var result = _localService.GetAll();
-                        return Ok(result);
+                        return BadRequest();
                     }
                     else
                     {
                         try
                         {
-                            var result = _localService.GetFile(filename);
+                            var result = await _localService.GetFile(filename);
                             return File(result, "text/plain");
                         }
                         catch(FileNotFoundException ex)
                         {
-                            return NotFound(ex);
+                            return NotFound(ex.Message);
+                        }
+                        catch(Exception ex)
+                        {
+                            return BadRequest(ex.Message);
                         }
                     }
                 default:
-                    return NotFound();
+                    return BadRequest();
             }
         }
 
         [HttpPost]
         public async Task<IActionResult> Post([FromQuery]string storage, [FromForm]IFormFile file)
         {
-            if (file == null)
+            if (string.IsNullOrEmpty(storage))
             {
                 return BadRequest();
             }
-            if (string.IsNullOrEmpty(storage))
+            if (file == null)
             {
                 return BadRequest();
             }
@@ -72,9 +101,15 @@ namespace PlatformTest.WebApi.Controllers
                     {
                         var buffer = new byte[file.Length];
                         await stream.ReadAsync(buffer);
-                        _localService.Save(file.FileName, buffer);
-
-                        return NoContent();
+                        try
+                        {
+                            await _localService.Save(file.FileName, buffer);
+                            return NoContent();
+                        }
+                        catch (Exception ex)
+                        {
+                            return BadRequest(ex.Message);
+                        }
                     }
                 default:
                     return NotFound();

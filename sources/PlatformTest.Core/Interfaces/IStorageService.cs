@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace PlatformTest.Core.Interfaces
 {
     public interface IStorageService<T>
     {
-        IEnumerable<string> GetAll();
-        byte[] GetFile(string name);
-        void Save(string filename, byte[] data);
+        Task<IEnumerable<string>> GetAll();
+        Task<byte[]> GetFile(string name);
+        Task Save(string filename, byte[] data);
     }
 }
