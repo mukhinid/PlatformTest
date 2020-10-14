@@ -14,16 +14,21 @@ namespace PlatformTest.Core.Services
         public LocalStorageService(IOptions<LocalStorageOptions> options)
         {
             _options = options.Value;
+
+            if (!Directory.Exists(_options.RootDir))
+            {
+                Directory.CreateDirectory(_options.RootDir);
+            }
         }
 
         public IEnumerable<string> GetAll()
         {
-            if (Directory.Exists(_options.RootDir))
+            if (!Directory.Exists(_options.RootDir))
             {
-                return Directory.EnumerateFiles(_options.RootDir);
+                throw new DirectoryNotFoundException();
             }
 
-            throw new DirectoryNotFoundException();
+            return Directory.EnumerateFiles(_options.RootDir);
         }
 
         public byte[] GetFile(string name)
@@ -49,6 +54,11 @@ namespace PlatformTest.Core.Services
 
         public void Save(string filename, byte[] data)
         {
+            if (!Directory.Exists(_options.RootDir))
+            {
+                throw new DirectoryNotFoundException();
+            }
+
             var path = Path.Combine(_options.RootDir, filename);
             File.WriteAllBytes(path, data);
         }
