@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.StaticFiles;
 using PlatformTest.Core.Interfaces;
 using PlatformTest.Core.Storages;
 using System;
@@ -63,10 +64,16 @@ namespace PlatformTest.WebApi.Controllers
                     }
                     else
                     {
+                        var provider = new FileExtensionContentTypeProvider();
+                        if (!provider.TryGetContentType(filename, out var contentType))
+                        {
+                            contentType = "text/plain";
+                        }
+
                         try
                         {
                             var result = await _localService.GetFile(filename);
-                            return File(result, "text/plain");
+                            return File(result, contentType);
                         }
                         catch(FileNotFoundException ex)
                         {
@@ -104,7 +111,7 @@ namespace PlatformTest.WebApi.Controllers
                         try
                         {
                             await _localService.Save(file.FileName, buffer);
-                            return NoContent();
+                            return CreatedAtAction(nameof(Get), new { file.FileName }, new { buffer });
                         }
                         catch (Exception ex)
                         {
