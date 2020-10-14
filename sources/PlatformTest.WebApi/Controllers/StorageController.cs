@@ -8,12 +8,12 @@ namespace PlatformTest.WebApi.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class HomeController : ControllerBase
+    public class StorageController : ControllerBase
     {
         private readonly IStorageService<LocalStorage> _localService;
         private readonly IStorageService<FtpStorage> _ftpService;
 
-        public HomeController(IStorageService<LocalStorage> localService, IStorageService<FtpStorage> ftpService)
+        public StorageController(IStorageService<LocalStorage> localService, IStorageService<FtpStorage> ftpService)
         {
             _localService = localService;
             _ftpService = ftpService;
