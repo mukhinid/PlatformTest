@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.StaticFiles;
 using PlatformTest.Core.Interfaces;
 using PlatformTest.Core.Storages;
+using System;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace PlatformTest.WebApi.Controllers
@@ -19,14 +22,81 @@ namespace PlatformTest.WebApi.Controllers
             _ftpService = ftpService;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Post([FromQuery]string storage, [FromForm]IFormFile file)
+        [HttpGet()]
+        public async Task<IActionResult> Get([FromQuery] string storage)
         {
-            if (file == null)
+            if (string.IsNullOrEmpty(storage))
             {
                 return BadRequest();
             }
+
+            switch(storage)
+            {
+                case "local":
+                    try
+                    {
+                        var result = await _localService.GetAll();
+                        return Ok(result);
+                    }
+                    catch(Exception ex)
+                    {
+                        return BadRequest(ex.Message);
+                    }
+                default:
+                    return BadRequest();
+            }
+        }
+
+        [HttpGet("{filename}")]
+        public async Task<IActionResult> Get([FromQuery]string storage, [FromRoute]string filename)
+        {
             if (string.IsNullOrEmpty(storage))
+            {
+                return BadRequest();
+            }
+
+            switch(storage)
+            {
+                case "local":
+                    if (string.IsNullOrEmpty(filename))
+                    {
+                        return BadRequest();
+                    }
+                    else
+                    {
+                        var provider = new FileExtensionContentTypeProvider();
+                        if (!provider.TryGetContentType(filename, out var contentType))
+                        {
+                            contentType = "text/plain";
+                        }
+
+                        try
+                        {
+                            var result = await _localService.GetFile(filename);
+                            return File(result, contentType);
+                        }
+                        catch(FileNotFoundException ex)
+                        {
+                            return NotFound(ex.Message);
+                        }
+                        catch(Exception ex)
+                        {
+                            return BadRequest(ex.Message);
+                        }
+                    }
+                default:
+                    return BadRequest();
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Post([FromQuery]string storage, [FromForm]IFormFile file)
+        {
+            if (string.IsNullOrEmpty(storage))
+            {
+                return BadRequest();
+            }
+            if (file == null)
             {
                 return BadRequest();
             }
@@ -38,9 +108,15 @@ namespace PlatformTest.WebApi.Controllers
                     {
                         var buffer = new byte[file.Length];
                         await stream.ReadAsync(buffer);
-                        _localService.Save(file.FileName, buffer);
-
-                        return NoContent();
+                        try
+                        {
+                            await _localService.Save(file.FileName, buffer);
+                            return CreatedAtAction(nameof(Get), new { file.FileName }, new { buffer });
+                        }
+                        catch (Exception ex)
+                        {
+                            return BadRequest(ex.Message);
+                        }
                     }
                 default:
                     return NotFound();
