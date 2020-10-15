@@ -42,6 +42,16 @@ namespace PlatformTest.WebApi.Controllers
                     {
                         return BadRequest(ex.Message);
                     }
+                case "ftp":
+                    try
+                    {
+                        var result = await _ftpService.GetAll();
+                        return Ok(result);
+                    }
+                    catch (Exception ex)
+                    {
+                        return BadRequest(ex.Message);
+                    }
                 default:
                     return BadRequest();
             }
