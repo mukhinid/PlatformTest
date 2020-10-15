@@ -2,7 +2,6 @@
 using PlatformTest.Core.Interfaces;
 using PlatformTest.Core.Options;
 using PlatformTest.Data.Descriminators;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -19,43 +18,61 @@ namespace PlatformTest.Data.Services
             _options = options.Value;
         }
 
-        public Task Delete(string filename)
+        public async Task Delete(string filename)
         {
-            throw new NotImplementedException();
+            var url = Path.Combine(_options.Url, filename);
+            await MakeRequest(WebRequestMethods.Ftp.DeleteFile, url);
         }
 
         public async Task<IEnumerable<string>> GetAll()
         {
-            var request = (FtpWebRequest)WebRequest.Create(_options.Url);
-            request.Method = WebRequestMethods.Ftp.ListDirectory;
+            var result = await MakeRequest(WebRequestMethods.Ftp.ListDirectory, _options.Url);
+            var directories = new List<string>();
+
+            using var ms = new MemoryStream(result);
+            using var reader = new StreamReader(ms);
+            string line = await reader.ReadLineAsync();
+            while (!string.IsNullOrEmpty(line))
+            {
+                directories.Add(line);
+                line = await reader.ReadLineAsync();
+            }
+
+            return directories;
+        }
+
+        public async Task<byte[]> GetFile(string name)
+        {
+            var url = Path.Combine(_options.Url, name);
+            return await MakeRequest(WebRequestMethods.Ftp.DownloadFile, url);
+        }
+
+        public async Task Save(string filename, byte[] data)
+        {
+            var url = Path.Combine(_options.Url, filename);
+            await MakeRequest(WebRequestMethods.Ftp.UploadFile, url, data);
+        }
+
+        private async Task<byte[]> MakeRequest(string method, string uri, byte[] requestBody = null)
+        {
+            var request = (FtpWebRequest)WebRequest.Create(uri);
+            request.Method = method;
             request.Credentials = new NetworkCredential(_options.Login, _options.Password);
             request.UsePassive = true;
             request.UseBinary = true;
             request.EnableSsl = false;
 
-            using var response = (FtpWebResponse)(await request.GetResponseAsync());
-            using var stream = response.GetResponseStream();
-            using var reader = new StreamReader(stream);
-            var result = new List<string>();
-
-            string line = await reader.ReadLineAsync();
-            while (!string.IsNullOrEmpty(line))
+            if (requestBody != null)
             {
-                result.Add(line);
-                line = await reader.ReadLineAsync();
+                using var requestMemStream = new MemoryStream(requestBody);
+                using var requestStream = await request.GetRequestStreamAsync();
+                requestMemStream.CopyTo(requestStream);
             }
 
-            return result;
-        }
-
-        public Task<byte[]> GetFile(string name)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task Save(string filename, byte[] data)
-        {
-            throw new NotImplementedException();
+            using var response = (FtpWebResponse)(await request.GetResponseAsync());
+            using var responseBody = new MemoryStream();
+            response.GetResponseStream().CopyTo(responseBody);
+            return responseBody.ToArray();
         }
     }
 }

@@ -94,6 +94,33 @@ namespace PlatformTest.WebApi.Controllers
                             return BadRequest(ex.Message);
                         }
                     }
+                case "ftp":
+                    if (string.IsNullOrEmpty(filename))
+                    {
+                        return BadRequest();
+                    }
+                    else
+                    {
+                        var provider = new FileExtensionContentTypeProvider();
+                        if (!provider.TryGetContentType(filename, out var contentType))
+                        {
+                            contentType = "text/plain";
+                        }
+
+                        try
+                        {
+                            var result = await _ftpService.GetFile(filename);
+                            return File(result, contentType);
+                        }
+                        catch (FileNotFoundException ex)
+                        {
+                            return NotFound(ex.Message);
+                        }
+                        catch (Exception ex)
+                        {
+                            return BadRequest(ex.Message);
+                        }
+                    }
                 default:
                     return BadRequest();
             }
@@ -127,6 +154,16 @@ namespace PlatformTest.WebApi.Controllers
                     {
                         return BadRequest(ex.Message);
                     }
+                case "ftp":
+                    try
+                    {
+                        await _ftpService.Delete(filename);
+                        return NoContent();
+                    }
+                    catch (Exception ex)
+                    {
+                        return BadRequest(ex.Message);
+                    }
                 default:
                     return BadRequest();
             }
@@ -154,6 +191,21 @@ namespace PlatformTest.WebApi.Controllers
                         try
                         {
                             await _localService.Save(file.FileName, buffer);
+                            return CreatedAtAction(nameof(Get), new { file.FileName }, new { buffer });
+                        }
+                        catch (Exception ex)
+                        {
+                            return BadRequest(ex.Message);
+                        }
+                    }
+                case "ftp":
+                    using (var stream = file.OpenReadStream())
+                    {
+                        var buffer = new byte[file.Length];
+                        await stream.ReadAsync(buffer);
+                        try
+                        {
+                            await _ftpService.Save(file.FileName, buffer);
                             return CreatedAtAction(nameof(Get), new { file.FileName }, new { buffer });
                         }
                         catch (Exception ex)
