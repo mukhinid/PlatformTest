@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PlatformTest.Core\PlatformTest.Core.csproj" />
+    <ProjectReference Include="..\PlatformTest.Data\PlatformTest.Data.csproj" />
   </ItemGroup>
 
 
