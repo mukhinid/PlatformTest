@@ -1,14 +1,14 @@
 ﻿using Microsoft.Extensions.Options;
 using PlatformTest.Core.Interfaces;
 using PlatformTest.Core.Options;
-using PlatformTest.Core.Storages;
+using PlatformTest.Data.Descriminators;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace PlatformTest.Core.Services
+namespace PlatformTest.Data.Services
 {
-    public sealed class LocalStorageService : IStorageService<LocalStorage>
+    public sealed class LocalStorageService : IStorageService<Local>
     {
         private readonly LocalStorageOptions _options;
 

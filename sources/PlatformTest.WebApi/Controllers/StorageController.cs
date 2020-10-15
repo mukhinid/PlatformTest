@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
 using PlatformTest.Core.Interfaces;
-using PlatformTest.Core.Storages;
+using PlatformTest.Data.Descriminators;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -13,10 +13,10 @@ namespace PlatformTest.WebApi.Controllers
     [Route("[controller]")]
     public class StorageController : ControllerBase
     {
-        private readonly IStorageService<LocalStorage> _localService;
-        private readonly IStorageService<FtpStorage> _ftpService;
+        private readonly IStorageService<Local> _localService;
+        private readonly IStorageService<Ftp> _ftpService;
 
-        public StorageController(IStorageService<LocalStorage> localService, IStorageService<FtpStorage> ftpService)
+        public StorageController(IStorageService<Local> localService, IStorageService<Ftp> ftpService)
         {
             _localService = localService;
             _ftpService = ftpService;
