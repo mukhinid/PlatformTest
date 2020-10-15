@@ -1,13 +1,18 @@
 ﻿using PlatformTest.Core.Interfaces;
-using PlatformTest.Core.Storages;
+using PlatformTest.Data.Descriminators;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace PlatformTest.Core.Services
+namespace PlatformTest.Data.Services
 {
-    public sealed class FtpStorageService : IStorageService<FtpStorage>
+    public sealed class FtpStorageService : IStorageService<Ftp>
     {
+        public Task Delete(string filename)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<IEnumerable<string>> GetAll()
         {
             throw new NotImplementedException();

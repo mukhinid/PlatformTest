@@ -5,8 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PlatformTest.Core.Interfaces;
 using PlatformTest.Core.Options;
-using PlatformTest.Core.Services;
-using PlatformTest.Core.Storages;
+using PlatformTest.Data.Descriminators;
+using PlatformTest.Data.Services;
 
 namespace PlatformTest.WebApi
 {
@@ -25,8 +25,8 @@ namespace PlatformTest.WebApi
 
             services.Configure<LocalStorageOptions>(Configuration.GetSection(LocalStorageOptions.Section));
 
-            services.AddTransient<IStorageService<FtpStorage>, FtpStorageService>();
-            services.AddTransient<IStorageService<LocalStorage>, LocalStorageService>();
+            services.AddTransient<IStorageService<Ftp>, FtpStorageService>();
+            services.AddTransient<IStorageService<Local>, LocalStorageService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

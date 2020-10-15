@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
 using PlatformTest.Core.Interfaces;
-using PlatformTest.Core.Storages;
+using PlatformTest.Data.Descriminators;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -13,10 +13,10 @@ namespace PlatformTest.WebApi.Controllers
     [Route("[controller]")]
     public class StorageController : ControllerBase
     {
-        private readonly IStorageService<LocalStorage> _localService;
-        private readonly IStorageService<FtpStorage> _ftpService;
+        private readonly IStorageService<Local> _localService;
+        private readonly IStorageService<Ftp> _ftpService;
 
-        public StorageController(IStorageService<LocalStorage> localService, IStorageService<FtpStorage> ftpService)
+        public StorageController(IStorageService<Local> localService, IStorageService<Ftp> ftpService)
         {
             _localService = localService;
             _ftpService = ftpService;
@@ -89,6 +89,39 @@ namespace PlatformTest.WebApi.Controllers
             }
         }
 
+        [HttpDelete("{filename}")]
+        public async Task<IActionResult> Delete([FromQuery]string storage, [FromRoute]string filename)
+        {
+            if (string.IsNullOrEmpty(storage))
+            {
+                return BadRequest();
+            }
+            if (string.IsNullOrEmpty(filename))
+            {
+                return BadRequest();
+            }
+
+            switch (storage)
+            {
+                case "local":
+                    try
+                    {
+                        await _localService.Delete(filename);
+                        return NoContent();
+                    }
+                    catch(FileNotFoundException ex)
+                    {
+                        return NotFound(ex.Message);
+                    }
+                    catch(Exception ex)
+                    {
+                        return BadRequest(ex.Message);
+                    }
+                default:
+                    return BadRequest();
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> Post([FromQuery]string storage, [FromForm]IFormFile file)
         {
@@ -119,7 +152,7 @@ namespace PlatformTest.WebApi.Controllers
                         }
                     }
                 default:
-                    return NotFound();
+                    return BadRequest();
             }
         }
     }
