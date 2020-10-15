@@ -24,6 +24,7 @@ namespace PlatformTest.WebApi
             services.AddControllers();
 
             services.Configure<LocalStorageOptions>(Configuration.GetSection(LocalStorageOptions.Section));
+            services.Configure<FtpStorageOptions>(Configuration.GetSection(FtpStorageOptions.Section));
 
             services.AddTransient<IStorageService<Ftp>, FtpStorageService>();
             services.AddTransient<IStorageService<Local>, LocalStorageService>();
